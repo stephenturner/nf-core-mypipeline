@@ -5,6 +5,7 @@
 */
 
 include { FASTQC                 } from '../modules/nf-core/fastqc/main'
+include { SEQTK_TRIM             } from '../modules/nf-core/seqtk/trim/main'
 include { MULTIQC                } from '../modules/nf-core/multiqc/main'
 include { paramsSummaryMap       } from 'plugin/nf-validation'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
@@ -36,6 +37,16 @@ workflow MYPIPELINE {
     ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.collect{it[1]})
     ch_versions = ch_versions.mix(FASTQC.out.versions.first())
 
+    //
+    // MODULE: Run SEQTK_TRIM
+    //
+    if (!params.skip_trim) {
+        SEQTK_TRIM (
+            ch_samplesheet
+        )
+        ch_trimmed  = SEQTK_TRIM.out.reads
+        ch_versions = ch_versions.mix(SEQTK_TRIM.out.versions.first())
+    }
     //
     // Collate and save software versions
     //
